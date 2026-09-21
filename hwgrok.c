@@ -581,28 +581,47 @@ grok_disk(topo_hdl_t *thp, tnode_t *node, void *arg)
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_STORAGE, "model",
 	    &(cinfo->hwci_model), &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/model on node: %s=%d: "
+		    "%s\n", TOPO_PGROUP_STORAGE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_STORAGE, "manufacturer",
 	    &(cinfo->hwci_manufacturer), &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/manufacturer on node: "
+		    "%s=%d: %s\n", TOPO_PGROUP_STORAGE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_IO, TOPO_IO_DEV_PATH,
 	    &disk->hwdk_devpath, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_DEV_PATH, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_STORAGE, "logical-disk",
 	    &disk->hwdk_ctd, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/logical-disk on node: "
+		    "%s=%d: %s\n", TOPO_PGROUP_STORAGE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT32, TOPO_PGROUP_STORAGE,
 	    "speed-in-rpm", &disk->hwdk_speed) != 0) {
+		hwg_error("failed to lookup prop %s/speed-in-rpm on node: "
+		    "%s=%d\n", TOPO_PGROUP_STORAGE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_STORAGE,
 	    "capacity-in-bytes", &capstr, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/capacity-in-bytes on "
+		    "node: %s=%d: %s\n", TOPO_PGROUP_STORAGE,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (capstr != NULL)  {
@@ -772,6 +791,9 @@ grok_dimm(topo_hdl_t *thp, tnode_t *node, void *arg)
 	}
 	if (topo_prop_get_string(node, "dimm-properties", "dimm-size",
 	    &(dimm->hwdi_size), &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop dimm-properties/dimm-size "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	dimm->hwdi_ecc_supp = cbarg->cb_ecc_supp;
@@ -934,30 +956,51 @@ grok_usbdev(topo_hdl_t *thp, tnode_t *node, void *arg)
 	if (topo_prop_get_string(node, TOPO_PGROUP_USB_PROPS,
 	    TOPO_PGROUP_USB_PROPS_VNAME, &usbdev->hwusb_vendor, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_USB_PROPS, TOPO_PGROUP_USB_PROPS_VNAME,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_USB_PROPS,
 	    TOPO_PGROUP_USB_PROPS_SPEED, &usbdev->hwusb_speed, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_USB_PROPS, TOPO_PGROUP_USB_PROPS_SPEED,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_USB_PROPS,
 	    TOPO_PGROUP_USB_PROPS_VERSION, &usbdev->hwusb_version, &err) !=
 	    0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_USB_PROPS, TOPO_PGROUP_USB_PROPS_VERSION,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_IO, TOPO_IO_DEV_PATH,
 	    &usbdev->hwusb_devpath, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_DEV_PATH, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_IO, TOPO_IO_DRIVER,
 	    &usbdev->hwusb_drivernm, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_DRIVER, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_uint32(node, TOPO_PGROUP_IO, TOPO_IO_INSTANCE,
 	    &usbdev->hwusb_driverinst, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_INSTANCE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	usbdev->hwusb_is_internal = !(cbarg->cb_is_chassis_dev);
@@ -988,35 +1031,61 @@ grok_sp(topo_hdl_t *thp, tnode_t *node, void *arg)
 	}
 	if (topo_prop_get_string(node, "network-config", "mac-address",
 	    &sp->hwsp_macaddr, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/mac-address "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv4-address",
 	    &sp->hwsp_ipv4_addr, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/ipv4-address "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv4-subnet",
 	    &sp->hwsp_ipv4_subnet, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/ipv4-subnet "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv4-gateway",
 	    &sp->hwsp_ipv4_gateway, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/ipv4-gateway "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv4-config-type",
 	    &sp->hwsp_ipv4_config_type, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop "
+		    "network-config/ipv4-config-type on node: %s=%d: %s\n",
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "vlan-id",
 	    &sp->hwsp_vlan_id, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/vlan-id on "
+		    "node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv6-address",
 	    &sp->hwsp_ipv6_addr, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop network-config/ipv6-address "
+		    "on node: %s=%d: %s\n", cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, "network-config", "ipv6-config-type",
 	    &sp->hwsp_ipv6_config_type, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop "
+		    "network-config/ipv6-config-type on node: %s=%d: %s\n",
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	hwinfo->hwi_sp = sp;
@@ -1049,11 +1118,19 @@ grok_motherboard(topo_hdl_t *thp, tnode_t *node, void *arg)
 	if (topo_prop_get_string(node, TOPO_PGROUP_MOTHERBOARD,
 	    TOPO_PROP_MB_MANUFACTURER, &(cinfo->hwci_manufacturer),
 	    &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_MOTHERBOARD, TOPO_PROP_MB_MANUFACTURER,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_MOTHERBOARD,
 	    TOPO_PROP_MB_PRODUCT, &(cinfo->hwci_model), &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_MOTHERBOARD, TOPO_PROP_MB_PRODUCT,
+		    cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		goto err;
 	}
 	hwinfo->hwi_motherboard = mb;
@@ -1097,12 +1174,16 @@ grok_chassis(topo_hdl_t *thp, tnode_t *node, void *arg)
 	}
 
 	if (nvlist_lookup_string(auth, FM_FMRI_AUTH_PRODUCT, &val) == 0 &&
-	    (cinfo->hwci_model = topo_hdl_strdup(thp, val)) == NULL)
+	    (cinfo->hwci_model = topo_hdl_strdup(thp, val)) == NULL) {
+		hwg_error("alloc failed\n");
 		goto err;
+	}
 
 	if (nvlist_lookup_string(auth, FM_FMRI_AUTH_CHASSIS, &val) == 0 &&
-	    (cinfo->hwci_serial = topo_hdl_strdup(thp, val)) == NULL)
+	    (cinfo->hwci_serial = topo_hdl_strdup(thp, val)) == NULL) {
+		hwg_error("alloc failed\n");
 		goto err;
+	}
 
 	hwinfo->hwi_chassis = chassis;
 
