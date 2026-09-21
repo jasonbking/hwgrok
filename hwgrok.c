@@ -737,6 +737,10 @@ grok_mem_ctrl(topo_hdl_t *thp, tnode_t *node, void *arg)
 
 	if (topo_prop_get_string(node, "memory-controller-properties",
 	    "memory-ecc", &ecc, &err) != 0 && err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop "
+		    "memory-controller-properties/memory-ecc on node: "
+		    "%s=%d: %s\n", cbarg->cb_nodename, cbarg->cb_nodeinst,
+		    topo_strerror(err));
 		return (-1);
 	}
 	cbarg->cb_ecc_supp = B_FALSE;
@@ -818,18 +822,30 @@ grok_pcidev(topo_hdl_t *thp, tnode_t *node, void *arg)
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT32, TOPO_PGROUP_PCI,
 	    "link-maximum-width", &pcidev->hwpci_maxlanes) != 0) {
+		hwg_error("failed to lookup prop %s/link-maximum-width on "
+		    "node: %s=%d\n", TOPO_PGROUP_PCI, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		return (-1);
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT32, TOPO_PGROUP_PCI,
 	    "link-current-width", &pcidev->hwpci_currlanes) != 0) {
+		hwg_error("failed to lookup prop %s/link-current-width on "
+		    "node: %s=%d\n", TOPO_PGROUP_PCI, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		return (-1);
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT64, TOPO_PGROUP_PCI,
 	    "link-maximum-speed", &pcidev->hwpci_maxspeed) != 0) {
+		hwg_error("failed to lookup prop %s/link-maximum-speed on "
+		    "node: %s=%d\n", TOPO_PGROUP_PCI, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		return (-1);
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT64, TOPO_PGROUP_PCI,
 	    "link-current-speed", &pcidev->hwpci_currspeed) != 0) {
+		hwg_error("failed to lookup prop %s/link-current-speed on "
+		    "node: %s=%d\n", TOPO_PGROUP_PCI, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		return (-1);
 	}
 	llist_append(&(hwinfo->hwi_pcidevs), pcidev);
@@ -849,30 +865,48 @@ grok_pcifn(topo_hdl_t *thp, tnode_t *node, void *arg)
 	if (topo_prop_get_string(node, TOPO_PGROUP_PCI, TOPO_PCI_VENDNM,
 	    &pcidev->hwpci_vendor, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_PCI, TOPO_PCI_VENDNM, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		return (-1);
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_PCI, TOPO_PCI_DEVNM,
 	    &pcidev->hwpci_devnm, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_PCI, TOPO_PCI_DEVNM, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		return (-1);
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_PCI, TOPO_PCI_SUBSYSNM,
 	    &pcidev->hwpci_subsysnm, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_PCI, TOPO_PCI_SUBSYSNM, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		return (-1);
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_IO, TOPO_IO_DEV,
 	    &pcidev->hwpci_devpath, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_DEV, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		return (-1);
 	}
 	if (topo_prop_get_string(node, TOPO_PGROUP_IO, TOPO_IO_DRIVER,
 	    &pcidev->hwpci_drivernm, &err) != 0 &&
 	    err != ETOPO_PROP_NOENT) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d: %s\n",
+		    TOPO_PGROUP_IO, TOPO_IO_DRIVER, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst, topo_strerror(err));
 		return (-1);
 	}
 	if (hwg_get_prop(node, TOPO_TYPE_UINT32, TOPO_PGROUP_IO,
 	    TOPO_IO_INSTANCE, &pcidev->hwpci_driverinst) != 0) {
+		hwg_error("failed to lookup prop %s/%s on node: %s=%d\n",
+		    TOPO_PGROUP_IO, TOPO_IO_INSTANCE, cbarg->cb_nodename,
+		    cbarg->cb_nodeinst);
 		return (-1);
 	}
 
