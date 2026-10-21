@@ -36,6 +36,9 @@ The top-level object contains:
 - `dimms`: label, byte size, manufacturer, product, part, and serial number.
 - `network_interfaces`: physical NIC ports, including their driver name,
   instance, primary MAC address, PCI identity, location, and transceiver.
+- `fibre_channel_hbas`: FC ports with their `cN` device name, adapter
+  manufacturer, model, serial number, port WWN, and optional transceiver/UFM
+  information.
 - `slots`: SMBIOS Type 9 slots and their topo-correlated occupants.
 
 UFM data is included as an optional `ufm` array on devices that expose UFM
@@ -108,6 +111,19 @@ Example:
         "revision": "A",
         "serial_number": "FNS12345678"
       }
+    }
+  ],
+  "fibre_channel_hbas": [
+    {
+      "id": "hc:///motherboard=0/pciexbus=5/pciexdev=0/pciexfn=0/port=0",
+      "name": "c4",
+      "driver": "fp",
+      "instance": 4,
+      "manufacturer": "QLogic Corp.",
+      "model": "ISP2722-based 16/32Gb Fibre Channel Adapter",
+      "serial_number": "RFD1234",
+      "port_wwn": "21000024ff123456",
+      "node_wwn": "20000024ff123456"
     }
   ],
   "slots": [

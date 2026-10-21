@@ -20,7 +20,7 @@
 #include "llist.h"
 
 #define	EXIT_USAGE	2
-#define	HWGROK_VERSION	"20261017a"
+#define	HWGROK_VERSION	"20261020a"
 
 extern void hwg_debug(const char *, ...);
 extern void hwg_error(const char *, ...);

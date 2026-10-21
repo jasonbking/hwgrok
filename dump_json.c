@@ -203,6 +203,23 @@ node_get_fmri_string(tnode_t *node, const char *name)
 }
 
 static char *
+node_get_pci_fmri_string(tnode_t *node, const char *name)
+{
+	char *value;
+
+	for (; node != NULL; node = topo_node_parent(node)) {
+		if (!node_named(node, PCI_FUNCTION) &&
+		    !node_named(node, PCIEX_FUNCTION) &&
+		    !node_named(node, PCI_DEVICE) &&
+		    !node_named(node, PCIEX_DEVICE))
+			break;
+		if ((value = node_get_fmri_string(node, name)) != NULL)
+			return (value);
+	}
+	return (NULL);
+}
+
+static char *
 node_get_ancestor_string(tnode_t *node, const char *group, const char *name)
 {
 	char *value = NULL;
@@ -419,10 +436,26 @@ dump_pci_identity(tnode_t *fn, boolean_t *first)
 		json_string_field("model", model, first);
 		topo_hdl_strfree(dump_thp, model);
 	}
-	if ((serial = node_get_fmri_string(fn, FM_FMRI_HC_SERIAL_ID)) != NULL) {
+	if ((serial = node_get_pci_fmri_string(fn,
+	    FM_FMRI_HC_SERIAL_ID)) != NULL) {
 		json_string_field("serial_number", serial, first);
 		free(serial);
 	}
+}
+
+static void
+dump_fc_device_name(tnode_t *port, const char *key, boolean_t *first)
+{
+	uint32_t instance;
+	char name[32];
+	int err;
+
+	if (topo_prop_get_uint32(port, TOPO_PGROUP_IO, TOPO_IO_INSTANCE,
+	    &instance, &err) != 0)
+		return;
+
+	(void) snprintf(name, sizeof (name), "c%" PRIu32, instance);
+	json_string_field(key, name, first);
 }
 
 static void
@@ -529,6 +562,7 @@ dump_fc_port(tnode_t *port)
 		json_string_field("id", id, &first);
 		free(id);
 	}
+	dump_fc_device_name(port, "device_name", &first);
 	dump_driver_name(port, B_TRUE, &first);
 
 	if (node_get_string(port, PG_FC, PROP_FC_NODE_WWN, &value) == 0) {
@@ -565,6 +599,35 @@ dump_fc_port(tnode_t *port)
 	}
 	dump_transceiver(port, &first);
 	dump_ufm(port, &first);
+	(void) putchar('}');
+}
+
+static void
+dump_fc_hba(tnode_t *port)
+{
+	tnode_t *fn = port_pcifn(port);
+	char *id, *value = NULL;
+	boolean_t first = B_TRUE;
+
+	(void) putchar('{');
+	if ((id = node_get_fmri(port)) != NULL) {
+		json_string_field("id", id, &first);
+		free(id);
+	}
+	dump_fc_device_name(port, "name", &first);
+	dump_driver_name(port, B_FALSE, &first);
+	dump_pci_identity(fn, &first);
+	if (node_get_string(port, PG_FC, PROP_FC_PORT_WWN, &value) == 0) {
+		json_string_field("port_wwn", value, &first);
+		topo_hdl_strfree(dump_thp, value);
+	}
+	if (node_get_string(port, PG_FC, PROP_FC_NODE_WWN, &value) == 0) {
+		json_string_field("node_wwn", value, &first);
+		topo_hdl_strfree(dump_thp, value);
+	}
+	dump_transceiver(port, &first);
+	if (fn != NULL)
+		dump_ufm(fn, &first);
 	(void) putchar('}');
 }
 
@@ -1085,6 +1148,26 @@ dump_network_interfaces(void)
 }
 
 static void
+dump_fibre_channel_hbas(void)
+{
+	hwg_node_ref_t *ref;
+	boolean_t first = B_TRUE;
+
+	(void) fputs("\"fibre_channel_hbas\":[", stdout);
+	for (ref = (hwg_node_ref_t *)dump_hwinfo->hwi_nodes.ll_next;
+	    ref != NULL; ref = (hwg_node_ref_t *)ref->ll_next) {
+		if (!node_has_string(ref->hwnr_node, PG_FC,
+		    PROP_FC_PORT_WWN))
+			continue;
+		if (!first)
+			(void) putchar(',');
+		first = B_FALSE;
+		dump_fc_hba(ref->hwnr_node);
+	}
+	(void) putchar(']');
+}
+
+static void
 dump_smbios_slots(void)
 {
 	hwg_slot_info_t *slot;
@@ -1205,6 +1288,8 @@ dump_hw_config_json(hwg_info_t *hwinfo, char *type)
 	dump_dimms();
 	(void) putchar(',');
 	dump_network_interfaces();
+	(void) putchar(',');
+	dump_fibre_channel_hbas();
 	(void) putchar(',');
 	dump_slots();
 	(void) fputs("}\n", stdout);
