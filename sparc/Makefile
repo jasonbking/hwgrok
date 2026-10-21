@@ -7,7 +7,7 @@
 #
 include ../Makefile.com
 
-LDFLAGS=	-lnvpair -L$(PROTO)/usr/lib/fm -ltopo -R/usr/lib/fm
+LDFLAGS=	-lnvpair -lsmbios -L$(PROTO)/usr/lib/fm -ltopo -R/usr/lib/fm
 
 %.o: ../%.c
 	$(CC) $(CFLAGS) -c $< -o $@

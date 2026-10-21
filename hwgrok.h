@@ -20,7 +20,7 @@
 #include "llist.h"
 
 #define	EXIT_USAGE	2
-#define	HWGROK_VERSION	"20190906a"
+#define	HWGROK_VERSION	"20261017a"
 
 extern void hwg_debug(const char *, ...);
 extern void hwg_error(const char *, ...);
@@ -192,6 +192,22 @@ typedef struct hwg_chassis {
 	hwg_common_info_t hwch_common_info;
 } hwg_chassis_t;
 
+typedef struct hwg_node_ref {
+	struct llist *ll_prev;
+	struct llist *ll_next;
+	tnode_t *hwnr_node;
+} hwg_node_ref_t;
+
+typedef struct hwg_slot_info {
+	struct llist *ll_prev;
+	struct llist *ll_next;
+	char *hwsi_label;
+	uint16_t hwsi_segment;
+	uint8_t hwsi_bus;
+	uint8_t hwsi_df;
+	uint8_t hwsi_usage;
+} hwg_slot_info_t;
+
 typedef struct hwg_info {
 	llist_t hwi_disk_bays;
 	llist_t hwi_processors;
@@ -204,6 +220,13 @@ typedef struct hwg_info {
 	hwg_motherboard_t *hwi_motherboard;
 	hwg_chassis_t *hwi_chassis;
 	hwg_sp_t *hwi_sp;
+	llist_t hwi_nodes;
+	llist_t hwi_slots;
+	char *hwi_system_manufacturer;
+	char *hwi_system_product;
+	char *hwi_system_serial;
+	char *hwi_system_description;
+	topo_hdl_t *hwi_topo_hdl;
 } hwg_info_t;
 
 typedef struct hwg_cbarg {
@@ -216,5 +239,7 @@ typedef struct hwg_cbarg {
 	boolean_t cb_is_chassis_dev;
 	boolean_t cb_ecc_supp;
 } hwg_cbarg_t;
+
+extern int hwg_get_smbios_info(hwg_info_t *);
 
 #endif	/* _HW_GROK_H */

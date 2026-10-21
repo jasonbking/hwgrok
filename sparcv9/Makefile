@@ -7,7 +7,8 @@
 #
 include ../Makefile.com
 
-LDFLAGS=	-lnvpair -L$(PROTO)/usr/lib/fm/sparcv9 -ltopo -R/usr/lib/fm/sparcv9
+LDFLAGS=	-lnvpair -lsmbios -L$(PROTO)/usr/lib/fm/sparcv9 -ltopo \
+		-R/usr/lib/fm/sparcv9
 
 %.o: ../%.c
 	$(CC) $(CFLAGS) -m64 -c $< -o $@

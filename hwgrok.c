@@ -13,6 +13,7 @@
 #include <fm/libtopo.h>
 #include <fm/topo_hc.h>
 #include <sys/fm/protocol.h>
+#include <sys/smbios.h>
 #include <sys/varargs.h>
 
 #include "hwgrok.h"
@@ -23,6 +24,77 @@ extern int dump_hw_config_json(hwg_info_t *, char *);
 
 static const char *pname;
 static const char optstr[] = "hR:v";
+
+static int
+hwg_smbios_slot_cb(smbios_hdl_t *shp, const smbios_struct_t *sp, void *arg)
+{
+	hwg_info_t *hwinfo = arg;
+	hwg_slot_info_t *slot;
+	smbios_slot_t smbl;
+
+	if (sp->smbstr_type != SMB_TYPE_SLOT ||
+	    smbios_info_slot(shp, sp->smbstr_id, &smbl) != 0 ||
+	    smbl.smbl_name == NULL || smbl.smbl_name[0] == '\0')
+		return (0);
+
+	if ((slot = calloc(1, sizeof (*slot))) == NULL)
+		return (1);
+
+	if ((slot->hwsi_label = strdup(smbl.smbl_name)) == NULL) {
+		free(slot);
+		return (1);
+	}
+
+	slot->hwsi_segment = smbl.smbl_sg;
+	slot->hwsi_bus = smbl.smbl_bus;
+	slot->hwsi_df = smbl.smbl_df;
+	slot->hwsi_usage = smbl.smbl_usage;
+	llist_append(&hwinfo->hwi_slots, slot);
+	return (0);
+}
+
+int
+hwg_get_smbios_info(hwg_info_t *hwinfo)
+{
+	smbios_hdl_t *shp;
+	smbios_system_t sys;
+	smbios_info_t info;
+	id_t id;
+	int err;
+
+	if ((shp = smbios_open(NULL, SMB_VERSION, 0, &err)) == NULL) {
+		hwg_error("failed to open SMBIOS data: %s\n",
+		    smbios_errmsg(err));
+		return (-1);
+	}
+
+	if ((id = smbios_info_system(shp, &sys)) != SMB_ERR &&
+	    smbios_info_common(shp, id, &info) != SMB_ERR) {
+		if (info.smbi_manufacturer != NULL)
+			hwinfo->hwi_system_manufacturer =
+			    strdup(info.smbi_manufacturer);
+		if (info.smbi_product != NULL)
+			hwinfo->hwi_system_product = strdup(info.smbi_product);
+		if (info.smbi_serial != NULL)
+			hwinfo->hwi_system_serial = strdup(info.smbi_serial);
+
+		if (info.smbi_manufacturer != NULL &&
+		    info.smbi_product != NULL) {
+			(void) asprintf(&hwinfo->hwi_system_description, "%s %s",
+			    info.smbi_manufacturer, info.smbi_product);
+		} else if (info.smbi_product != NULL) {
+			hwinfo->hwi_system_description =
+			    strdup(info.smbi_product);
+		}
+	} else {
+		hwg_error("failed to read SMBIOS system information: %s\n",
+		    smbios_errmsg(smbios_errno(shp)));
+	}
+
+	(void) smbios_iter(shp, hwg_smbios_slot_cb, hwinfo);
+	smbios_close(shp);
+	return (0);
+}
 
 static void
 usage()
@@ -1200,49 +1272,14 @@ static int
 topocb(topo_hdl_t *thp, tnode_t *node, void *arg)
 {
 	hwg_cbarg_t *cbarg = (hwg_cbarg_t *)arg;
-	int ret;
+	hwg_node_ref_t *ref;
 
-	cbarg->cb_nodename = topo_node_name(node);
-	cbarg->cb_nodeinst = topo_node_instance(node);
+	if ((ref = topo_hdl_zalloc(thp, sizeof (*ref))) == NULL)
+		return (TOPO_WALK_ERR);
 
-	if (strcmp(cbarg->cb_nodename, CHASSIS) == 0) {
-		ret = grok_chassis(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, BAY) == 0) {
-		ret = grok_bay(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, CHIP) == 0) {
-		ret = grok_chip(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, CORE) == 0) {
-		ret = grok_core(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, DIMM) == 0) {
-		ret = grok_dimm(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, DISK) == 0) {
-		ret = grok_disk(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, FAN) == 0) {
-		ret = grok_fan(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, MEMORYCONTROL) == 0) {
-		ret = grok_mem_ctrl(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, MOTHERBOARD) == 0) {
-		ret = grok_motherboard(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, PCI_DEVICE) == 0) {
-		ret = grok_pcidev(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, PCIEX_DEVICE) == 0) {
-		ret = grok_pcidev(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, PCI_FUNCTION) == 0) {
-		ret = grok_pcifn(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, PCIEX_FUNCTION) == 0) {
-		ret = grok_pcifn(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, PSU) == 0) {
-		ret = grok_psu(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, SP) == 0) {
-		ret = grok_sp(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, STRAND) == 0) {
-		ret = grok_strand(thp, node, arg);
-	} else if (strcmp(cbarg->cb_nodename, USB_DEVICE) == 0) {
-		ret = grok_usbdev(thp, node, arg);
-	} else {
-		return (TOPO_WALK_NEXT);
-	}
-	return (ret == 0 ? TOPO_WALK_NEXT : TOPO_WALK_ERR);
+	ref->hwnr_node = node;
+	llist_append(&cbarg->cb_hw_info->hwi_nodes, ref);
+	return (TOPO_WALK_NEXT);
 }
 
 int
@@ -1292,6 +1329,8 @@ main(int argc, char *argv[])
 	}
 
 	cbarg.cb_hw_info = &hwinfo;
+	hwinfo.hwi_topo_hdl = thp;
+	(void) hwg_get_smbios_info(&hwinfo);
 	if ((twp = topo_walk_init(thp, "hc", topocb, &cbarg, &err)) == NULL) {
 		hwg_error("failed to init topo walker: %s\n",
 		    topo_strerror(err));
@@ -1304,7 +1343,10 @@ main(int argc, char *argv[])
 	}
 	topo_walk_fini(twp);
 
-	dump_hw_config_json(&hwinfo, type);
+	if (dump_hw_config_json(&hwinfo, type) != 0) {
+		hwg_error("failed to generate hardware inventory\n");
+		goto out;
+	}
 	status = EXIT_SUCCESS;
 out:
 	if (thp != NULL) {
